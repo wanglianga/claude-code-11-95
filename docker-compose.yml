@@ -1,0 +1,35 @@
+# 一键启动：PostgreSQL + 许可与卸港预约服务
+# 启动：docker compose up --build
+# 应用就绪后访问 http://localhost:8080/swagger-ui.html
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: fishport
+      POSTGRES_USER: fishport
+      POSTGRES_PASSWORD: fishport
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fishport -d fishport"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/fishport
+      DB_USER: fishport
+      DB_PASSWORD: fishport
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:
